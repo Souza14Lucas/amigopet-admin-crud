@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amigo Pet - Admin</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Garante que o body use todo o espaço da tela */
@@ -39,7 +38,6 @@
 <body class="bg-gray-100">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Mude o nome da fonte aqui: -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
     <div id="app" class="px-4 py-8">
@@ -48,7 +46,6 @@
             <p id="auth-status" class="text-center mt-2 text-gray-600">Aguardando login...</p>
         </header>
 
-        <!-- Seção de Login -->
         <section id="login-view" class="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl transition-all duration-300">
             <h2 class="text-2xl font-bold mb-6 text-gray-800">Login Admin</h2>
             <form id="login-form" onsubmit="handleLogin(event)">
@@ -70,7 +67,6 @@
             </form>
         </section>
 
-        <!-- Seção de Gerenciamento de Produtos -->
         <section id="crud-view" class="w-full hidden mt-8 max-w-7xl mx-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-3xl font-bold text-gray-800">Gerenciar Produtos</h2>
@@ -79,7 +75,6 @@
                 </button>
             </div>
             
-            <!-- Formulário de Criação/Edição -->
             <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
                 <h3 id="form-title" class="text-xl font-semibold mb-4 text-indigo-600">Cadastrar Novo Produto</h3>
                 <form id="product-form" onsubmit="handleProductSubmit(event)">
@@ -100,7 +95,6 @@
                 </form>
             </div>
 
-            <!-- Tabela de Produtos -->
             <h2 class="text-3xl font-bold mb-4 text-gray-800">Produtos Disponíveis</h2>
             <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -116,8 +110,7 @@
                         </tr>
                     </thead>
                     <tbody id="product-list-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Produtos serão inseridos aqui pelo JS -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
 
@@ -137,13 +130,13 @@
     }
 
         // URL base da sua API Flask
+        // IMPORTANTE: Use a URL HTTPS do seu serviço API no Render (ex: https://amigopet-backend.onrender.com/api)
         const API_BASE_URL = 'https://amigopet-backend.onrender.com/api';
         
         // --- Estado Global ---
-        let userToken = localStorage.getItem('adminToken');
-        let isEditing = false;
-        let editingId = null;
-
+        // Removida a declaração global, o token é lido no momento da requisição
+        let adminName;
+        
         // --- Funções Auxiliares de DOM e Autenticação ---
 
         function displayMessage(element, message, type = 'error') {
@@ -155,15 +148,19 @@
         }
 
         function checkAuth() {
+            // CORREÇÃO: Lê o token e nome do localStorage no momento da checagem
+            const userToken = localStorage.getItem('adminToken');
+            const adminName = localStorage.getItem('adminName');
+
             const loginView = document.getElementById('login-view');
             const crudView = document.getElementById('crud-view');
             const authStatus = document.getElementById('auth-status');
 
-            if (userToken) {
+            if (userToken && adminName) { 
                 fetchProducts(); 
                 loginView.classList.add('hidden');
                 crudView.classList.remove('hidden');
-                authStatus.textContent = 'Status: Autenticado como Administrador';
+                authStatus.textContent = `Status: Autenticado como Administrador (${adminName})`;
             } else {
                 loginView.classList.remove('hidden');
                 crudView.classList.add('hidden');
@@ -194,9 +191,12 @@
                 const userType = data.user_type ? data.user_type.toLowerCase().trim() : '';
 
                 if (response.ok && userType === 'admin') {
-                    userToken = data.token;
-                    localStorage.setItem('adminToken', userToken);
-                    checkAuth();
+                    // ATUALIZAÇÃO CORRETA DE ESTADO GLOBAL E LOCALSTORAGE
+                    localStorage.setItem('adminToken', data.token);
+                    localStorage.setItem('adminName', data.user_name); // Salva o nome
+                    
+                    checkAuth(); // Chama a função que agora lerá o estado atualizado
+                    
                     displayMessage(loginMessage, 'Login bem-sucedido!', 'success');
                 } else if (response.ok && userType !== 'admin') {
                      displayMessage(loginMessage, 'Acesso negado. Usuário não é administrador.', 'error');
@@ -212,10 +212,10 @@
         }
 
         function logout() {
-            userToken = null;
             localStorage.removeItem('adminToken');
-            resetForm();
-            checkAuth();
+            localStorage.removeItem('adminName'); // Limpa o storage
+            // Força a atualização do estado
+            checkAuth(); 
         }
 
         // --- Funções de CRUD de Produtos ---
@@ -274,6 +274,9 @@
             const productId = document.getElementById('product-id').value;
             const crudMessage = document.getElementById('crud-message');
             const submitBtn = document.getElementById('submit-btn');
+            
+            // LÊ O TOKEN NO MOMENTO DA REQUISIÇÃO
+            const userToken = localStorage.getItem('adminToken');
 
             const method = productId ? 'PUT' : 'POST';
             const url = productId ? `${API_BASE_URL}/produtos/${productId}` : `${API_BASE_URL}/produtos`;
@@ -287,6 +290,12 @@
             };
 
             submitBtn.textContent = productId ? 'Salvando...' : 'Cadastrando...';
+
+            if (!userToken) {
+                 displayMessage(crudMessage, 'Erro: Usuário não autenticado. Faça login novamente.', 'error');
+                 logout();
+                 return;
+            }
 
             try {
                 const response = await fetch(url, {
@@ -304,11 +313,14 @@
                     displayMessage(crudMessage, data.message, 'success');
                     resetForm();
                     fetchProducts();
+                } else if (response.status === 401 || response.status === 403) {
+                     displayMessage(crudMessage, 'Permissão negada ou token expirado. Faça login novamente.', 'error');
+                     logout();
                 } else {
                     displayMessage(crudMessage, data.message || 'Erro na operação.');
                 }
             } catch (error) {
-                displayMessage(crudMessage, 'Erro de rede ao enviar dados.');
+                displayMessage(crudMessage, 'Erro de rede ao enviar dados. Verifique o log do servidor.');
             } finally {
                 submitBtn.textContent = productId ? 'Atualizar' : 'Cadastrar';
             }
@@ -316,6 +328,14 @@
 
         async function editProduct(id) {
             const crudMessage = document.getElementById('crud-message');
+            const userToken = localStorage.getItem('adminToken');
+
+            if (!userToken) {
+                 displayMessage(crudMessage, 'Erro: Usuário não autenticado. Faça login novamente.', 'error');
+                 logout();
+                 return;
+            }
+
             try {
                 const response = await fetch(`${API_BASE_URL}/produtos/${id}`, {
                     method: 'GET',
@@ -338,6 +358,9 @@
                     document.getElementById('cancel-btn').classList.remove('hidden');
 
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (response.status === 401 || response.status === 403) {
+                     displayMessage(crudMessage, 'Acesso negado. Faça login novamente.', 'error');
+                     logout();
                 } else {
                      displayMessage(crudMessage, product.message || 'Falha ao buscar produto para edição.');
                 }
@@ -349,6 +372,13 @@
         async function deleteProduct(id) {
             if (!confirm("Tem certeza que deseja deletar este produto?")) return;
             const crudMessage = document.getElementById('crud-message');
+            const userToken = localStorage.getItem('adminToken');
+
+            if (!userToken) {
+                 displayMessage(crudMessage, 'Erro: Usuário não autenticado. Faça login novamente.', 'error');
+                 logout();
+                 return;
+            }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/produtos/${id}`, {
@@ -361,6 +391,9 @@
                 if (response.ok) {
                     displayMessage(crudMessage, data.message, 'success');
                     fetchProducts();
+                } else if (response.status === 401 || response.status === 403) {
+                     displayMessage(crudMessage, 'Acesso negado. Faça login novamente.', 'error');
+                     logout();
                 } else {
                     displayMessage(crudMessage, data.message || 'Falha ao deletar produto.');
                 }
