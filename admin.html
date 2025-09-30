@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amigo Pet - Admin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Garante que o body use todo o espaço da tela */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centraliza horizontalmente o conteúdo do body */
+            background-color: #f3f4f6;
+        }
+        /* O contêiner principal deve crescer e usar margem automática para centralizar */
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centraliza itens como o cabeçalho */
+            width: 100%;
+            max-width: 1200px; /* Largura máxima para a tabela */
+        }
+        /* Garante que as seções internas de tamanho fixo fiquem centralizadas */
+        #login-view {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Define a largura máxima para a coluna de descrição e permite quebra de linha */
+        .max-w-desc {
+            max-width: 250px;
+            white-space: normal;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Mude o nome da fonte aqui: -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <div id="app" class="px-4 py-8">
+        <header class="w-full mb-8">
+            <h1 class="text-4xl font-extrabold text-indigo-700 text-center">Amigo Pet - Admin</h1>
+            <p id="auth-status" class="text-center mt-2 text-gray-600">Aguardando login...</p>
+        </header>
+
+        <!-- Seção de Login -->
+        <section id="login-view" class="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl transition-all duration-300">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Login Admin</h2>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email (Admin)</label>
+                    <input type="email" id="login-email" value="admin@petamigo.com" required 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                    <input type="password" id="login-password" value="admin123" required 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+                </div>
+                <button type="submit" id="login-btn" 
+                        class="w-full bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200 shadow-md">
+                    Entrar
+                </button>
+                <p id="login-message" class="mt-4 text-center text-red-500 hidden"></p>
+            </form>
+        </section>
+
+        <!-- Seção de Gerenciamento de Produtos -->
+        <section id="crud-view" class="w-full hidden mt-8 max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-800">Gerenciar Produtos</h2>
+                <button onclick="logout()" class="bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 transition duration-200 shadow-md">
+                    Sair
+                </button>
+            </div>
+            
+            <!-- Formulário de Criação/Edição -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 id="form-title" class="text-xl font-semibold mb-4 text-indigo-600">Cadastrar Novo Produto</h3>
+                <form id="product-form" onsubmit="handleProductSubmit(event)">
+                    <input type="hidden" id="product-id">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" id="prod-nome" placeholder="Nome" required class="p-3 border rounded-lg">
+                        <input type="number" id="prod-preco" placeholder="Preço (10.00)" step="0.01" required class="p-3 border rounded-lg">
+                        <input type="text" id="prod-categoria" placeholder="Categoria (Ex: Ração)" required class="p-3 border rounded-lg">
+                        <input type="number" id="prod-estoque" placeholder="Estoque" required class="p-3 border rounded-lg">
+                        <textarea id="prod-descricao" placeholder="Descrição (opcional)" class="p-3 border rounded-lg md:col-span-2"></textarea>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-4">
+                        <button type="button" onclick="resetForm()" id="cancel-btn" class="hidden bg-gray-300 text-gray-800 p-3 rounded-lg font-semibold hover:bg-gray-400 transition duration-200">Cancelar Edição</button>
+                        <button type="submit" id="submit-btn" class="bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200 shadow-md">
+                            Cadastrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabela de Produtos -->
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">Produtos Disponíveis</h2>
+            <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estoque</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider max-w-desc">Descrição</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-list-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Produtos serão inseridos aqui pelo JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <p id="crud-message" class="mt-4 text-center text-red-500 hidden"></p>
+        </section>
+    </div>
+
+    <script>
+        tailwind.config = {
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'], 
+                },
+            },
+        }
+    }
+
+        // URL base da sua API Flask
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+        
+        // --- Estado Global ---
+        let userToken = localStorage.getItem('adminToken');
+        let isEditing = false;
+        let editingId = null;
+
+        // --- Funções Auxiliares de DOM e Autenticação ---
+
+        function displayMessage(element, message, type = 'error') {
+            const className = type === 'error' ? 'text-red-500' : 'text-green-500';
+            element.textContent = message;
+            element.className = 'mt-4 text-center font-semibold ' + className;
+            element.classList.remove('hidden');
+            setTimeout(() => { element.classList.add('hidden'); }, 5000);
+        }
+
+        function checkAuth() {
+            const loginView = document.getElementById('login-view');
+            const crudView = document.getElementById('crud-view');
+            const authStatus = document.getElementById('auth-status');
+
+            if (userToken) {
+                fetchProducts(); 
+                loginView.classList.add('hidden');
+                crudView.classList.remove('hidden');
+                authStatus.textContent = 'Status: Autenticado como Administrador';
+            } else {
+                loginView.classList.remove('hidden');
+                crudView.classList.add('hidden');
+                authStatus.textContent = 'Status: Necessário Login';
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-password').value;
+            const loginBtn = document.getElementById('login-btn');
+            const loginMessage = document.getElementById('login-message');
+            
+            loginMessage.classList.add('hidden');
+            loginBtn.textContent = 'Carregando...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const data = await response.json();
+                
+                const userType = data.user_type ? data.user_type.toLowerCase().trim() : '';
+
+                if (response.ok && userType === 'admin') {
+                    userToken = data.token;
+                    localStorage.setItem('adminToken', userToken);
+                    checkAuth();
+                    displayMessage(loginMessage, 'Login bem-sucedido!', 'success');
+                } else if (response.ok && userType !== 'admin') {
+                     displayMessage(loginMessage, 'Acesso negado. Usuário não é administrador.', 'error');
+                } else {
+                    displayMessage(loginMessage, data.error || 'Erro nas credenciais.');
+                }
+            } catch (error) {
+                displayMessage(loginMessage, 'Erro de conexão com a API.');
+                console.error('Login error:', error);
+            } finally {
+                loginBtn.textContent = 'Entrar';
+            }
+        }
+
+        function logout() {
+            userToken = null;
+            localStorage.removeItem('adminToken');
+            resetForm();
+            checkAuth();
+        }
+
+        // --- Funções de CRUD de Produtos ---
+
+        async function fetchProducts() {
+            const tbody = document.getElementById('product-list-body');
+            const crudMessage = document.getElementById('crud-message');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Carregando produtos...</td></tr>';
+            
+            try {
+                // Rota pública para listar todos os produtos
+                const response = await fetch(`${API_BASE_URL}/produtos`, { method: 'GET' });
+                const products = await response.json();
+                
+                if (response.ok) {
+                    renderProducts(products);
+                } else {
+                     displayMessage(crudMessage, products.message || 'Erro ao carregar lista de produtos.');
+                }
+            } catch (error) {
+                displayMessage(crudMessage, 'Erro de rede ao buscar produtos.');
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-red-500">Falha ao carregar produtos.</td></tr>';
+            }
+        }
+
+        function renderProducts(products) {
+            const tbody = document.getElementById('product-list-body');
+            tbody.innerHTML = '';
+
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Nenhum produto cadastrado.</td></tr>';
+                return;
+            }
+
+            products.forEach(product => {
+                const row = `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">${product.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium">${product.nome}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${parseFloat(product.preco).toFixed(2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${product.estoque}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${product.categoria || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 max-w-desc">${product.descricao || 'Sem descrição'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="editProduct(${product.id})" class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
+                            <button onclick="deleteProduct(${product.id})" class="text-red-600 hover:text-red-900">Deletar</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+        
+        async function handleProductSubmit(event) {
+            event.preventDefault();
+            const productId = document.getElementById('product-id').value;
+            const crudMessage = document.getElementById('crud-message');
+            const submitBtn = document.getElementById('submit-btn');
+
+            const method = productId ? 'PUT' : 'POST';
+            const url = productId ? `${API_BASE_URL}/produtos/${productId}` : `${API_BASE_URL}/produtos`;
+            
+            const productData = {
+                nome: document.getElementById('prod-nome').value,
+                preco: parseFloat(document.getElementById('prod-preco').value),
+                categoria: document.getElementById('prod-categoria').value,
+                estoque: parseInt(document.getElementById('prod-estoque').value),
+                descricao: document.getElementById('prod-descricao').value,
+            };
+
+            submitBtn.textContent = productId ? 'Salvando...' : 'Cadastrando...';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${userToken}`
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayMessage(crudMessage, data.message, 'success');
+                    resetForm();
+                    fetchProducts();
+                } else {
+                    displayMessage(crudMessage, data.message || 'Erro na operação.');
+                }
+            } catch (error) {
+                displayMessage(crudMessage, 'Erro de rede ao enviar dados.');
+            } finally {
+                submitBtn.textContent = productId ? 'Atualizar' : 'Cadastrar';
+            }
+        }
+
+        async function editProduct(id) {
+            const crudMessage = document.getElementById('crud-message');
+            try {
+                const response = await fetch(`${API_BASE_URL}/produtos/${id}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                
+                const product = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('product-id').value = product.id;
+                    document.getElementById('prod-nome').value = product.nome;
+                    document.getElementById('prod-preco').value = parseFloat(product.preco);
+                    document.getElementById('prod-categoria').value = product.categoria;
+                    document.getElementById('prod-estoque').value = product.estoque;
+                    document.getElementById('prod-descricao').value = product.descricao || '';
+                    
+                    isEditing = true;
+                    document.getElementById('form-title').textContent = `Editar Produto #${id}`;
+                    document.getElementById('submit-btn').textContent = 'Atualizar';
+                    document.getElementById('cancel-btn').classList.remove('hidden');
+
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                     displayMessage(crudMessage, product.message || 'Falha ao buscar produto para edição.');
+                }
+            } catch (error) {
+                 displayMessage(crudMessage, 'Erro ao buscar detalhes do produto.');
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm("Tem certeza que deseja deletar este produto?")) return;
+            const crudMessage = document.getElementById('crud-message');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/produtos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayMessage(crudMessage, data.message, 'success');
+                    fetchProducts();
+                } else {
+                    displayMessage(crudMessage, data.message || 'Falha ao deletar produto.');
+                }
+            } catch (error) {
+                displayMessage(crudMessage, 'Erro de rede ao deletar.');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            isEditing = false;
+            document.getElementById('form-title').textContent = 'Cadastrar Novo Produto';
+            document.getElementById('submit-btn').textContent = 'Cadastrar';
+            document.getElementById('cancel-btn').classList.add('hidden');
+            document.getElementById('product-id').value = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', checkAuth);
+    </script>
+</body>
+</html>
