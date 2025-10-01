@@ -224,7 +224,17 @@
             <td class="px-6 py-4 whitespace-nowrap">${product.categoria || 'N/A'}</td>
             <td class="px-6 py-4 text-sm text-gray-500 max-w-desc">${product.descricao || 'Sem descrição'}</td>
             <td class="px-6 py-4 whitespace-nowrap">
-              ${product.imagem_url ? `<img src="${product.imagem_url}" alt="Imagem Produto" class="h-12 w-12 object-cover rounded cursor-pointer" onclick="openImageModal('${product.imagem_url}')">` : 'Sem imagem'}
+                ${product.imagem_url 
+                    ? `<div class="relative group w-12 h-12">
+                        <img src="${product.imagem_url}" 
+                            alt="Imagem Produto" 
+                            class="h-12 w-12 object-cover rounded cursor-pointer group-hover:opacity-70 transition"
+                            onclick="openImageModal('${product.imagem_url}')">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                            <span class="text-white text-xs bg-black bg-opacity-60 px-1 py-0.5 rounded">🔍 Preview</span>
+                        </div>
+                    </div>`
+                    : 'Sem imagem'}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <button onclick="editProduct(${product.id})" class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
