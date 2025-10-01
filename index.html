@@ -12,6 +12,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     
     <script>
+        function openImageModal(url) {
+            document.getElementById('modalImage').src = url;
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.getElementById('imageModal').classList.add('flex');
+            }
+
+            document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.getElementById('imageModal').classList.remove('flex');
+            });
+
+            document.getElementById('imageModal').addEventListener('click', (e) => {
+            if (e.target.id === 'imageModal') { 
+                document.getElementById('imageModal').classList.add('hidden');
+                document.getElementById('imageModal').classList.remove('flex');
+            }
+            });
         tailwind.config = {
             theme: {
                 extend: {
@@ -281,7 +298,12 @@
                         <td class="px-6 py-4 whitespace-nowrap">${product.categoria || 'N/A'}</td>
                         <td class="px-6 py-4 text-sm text-gray-500 max-w-desc">${product.descricao || 'Sem descrição'}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            ${product.imagem_url ? `<img src="${product.imagem_url}" alt="Imagem Produto" class="h-12 w-12 object-cover rounded">` : 'Sem imagem'}
+                            ${product.imagem_url 
+                            ? `<img src="${product.imagem_url}" 
+                                    alt="Imagem Produto" 
+                                    class="h-12 w-12 object-cover rounded cursor-pointer"
+                                    onclick="openImageModal('${product.imagem_url}')">` 
+                            : 'Sem imagem'}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button onclick="editProduct(${product.id})" class="text-indigo-600 hover:text-indigo-900 mr-4">Editar</button>
@@ -439,5 +461,11 @@
 
         document.addEventListener('DOMContentLoaded', checkAuth);
     </script>
+
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50">
+  <span id="closeModal" class="absolute top-4 right-6 text-white text-3xl cursor-pointer">&times;</span>
+  <img id="modalImage" src="" alt="Imagem Produto" class="max-h-[90%] max-w-[90%] rounded shadow-lg">
+</div>
+
 </body>
 </html>
