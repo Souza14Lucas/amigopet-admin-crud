@@ -225,10 +225,10 @@
             <td class="px-6 py-4 text-sm text-gray-500 max-w-desc">${product.descricao || 'Sem descrição'}</td>
             <td class="px-6 py-4 whitespace-nowrap">
                 ${product.imagem_url 
-                    ? `<div class="relative w-20 h-20 cursor-pointer" onclick="openImageModal('${product.imagem_url}')">
+                    ? `<div class="relative w-16 h-16 cursor-pointer" onclick="openImageModal('${product.imagem_url}')">
                         <img src="${product.imagem_url}" 
                             alt="Imagem Produto" 
-                            class="h-20 w-20 object-cover rounded"
+                            class="h-16 w-16 object-cover rounded"
                         >
                         <div class="absolute bottom-0 right-0 bg-indigo-600 rounded-tl-lg rounded-br-lg p-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
