@@ -225,13 +225,15 @@
             <td class="px-6 py-4 text-sm text-gray-500 max-w-desc">${product.descricao || 'Sem descrição'}</td>
             <td class="px-6 py-4 whitespace-nowrap">
                 ${product.imagem_url 
-                    ? `<div class="relative group w-12 h-12">
+                    ? `<div class="relative w-12 h-12 cursor-pointer" onclick="openImageModal('${product.imagem_url}')">
                         <img src="${product.imagem_url}" 
                             alt="Imagem Produto" 
-                            class="h-12 w-12 object-cover rounded cursor-pointer group-hover:opacity-70 transition"
-                            onclick="openImageModal('${product.imagem_url}')">
-                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                            <span class="text-white text-xs bg-black bg-opacity-60 px-1 py-0.5 rounded">🔍 Preview</span>
+                            class="h-12 w-12 object-cover rounded"
+                        >
+                        <div class="absolute bottom-0 right-0 bg-indigo-600 rounded-tl-lg rounded-br-lg p-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
                         </div>
                     </div>`
                     : 'Sem imagem'}
@@ -386,6 +388,15 @@
       document.getElementById('cancel-btn').classList.add('hidden');
       document.getElementById('product-id').value = '';
     }
+
+    function openImageModal(url) {
+            // Verifica se a URL é válida antes de tentar abrir
+            if (url && url !== 'Sem imagem') { 
+                window.open(url, '_blank', 'width=800,height=600,resizable=yes,scrollbars=yes');
+            } else {
+                alert('URL da imagem não disponível.');
+            }
+        }
 
     // Modal functions (global so onclick in the HTML rows can call it)
     function openImageModal(url) {
