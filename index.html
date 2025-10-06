@@ -63,6 +63,7 @@
             <input type="number" id="prod-preco" placeholder="Preço (10.00)" step="0.01" required class="p-3 border rounded-lg" />
             <input type="text" id="prod-categoria" placeholder="Categoria (Ex: Ração)" required class="p-3 border rounded-lg" />
             <input type="number" id="prod-estoque" placeholder="Estoque" required class="p-3 border rounded-lg" />
+            <input type="text" id="prod-especie" placeholder="Espécie (Ex: Cachorro, Gato)" required class="p-3 border rounded-lg">
             <input type="url" id="prod-imagem" placeholder="URL da Imagem" class="p-3 border rounded-lg md:col-span-2" />
             <textarea id="prod-descricao" placeholder="Descrição (opcional)" class="p-3 border rounded-lg md:col-span-2"></textarea>
           </div>
@@ -84,6 +85,7 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estoque</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase max-w-desc">Descrição</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Espécie</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Imagem</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
             </tr>
@@ -223,6 +225,7 @@
             <td class="px-6 py-4 whitespace-nowrap">${product.estoque}</td>
             <td class="px-6 py-4 whitespace-nowrap">${product.categoria || 'N/A'}</td>
             <td class="px-6 py-4 text-sm text-gray-500 max-w-desc">${product.descricao || 'Sem descrição'}</td>
+            <td class="px-6 py-4 whitespace-nowrap">${product.especie}</td>
             <td class="px-6 py-4 whitespace-nowrap">
                 ${product.imagem_url 
                     ? `<div class="relative w-16 h-16 cursor-pointer" onclick="openImageModal('${product.imagem_url}')">
@@ -254,7 +257,6 @@
       const crudMessage = document.getElementById('crud-message');
       const submitBtn = document.getElementById('submit-btn');
       const userToken = localStorage.getItem('adminToken');
-
       const method = productId ? 'PUT' : 'POST';
       const url = productId ? `${API_BASE_URL}/produtos/${productId}` : `${API_BASE_URL}/produtos`;
 
@@ -264,6 +266,7 @@
         categoria: document.getElementById('prod-categoria').value,
         estoque: parseInt(document.getElementById('prod-estoque').value),
         descricao: document.getElementById('prod-descricao').value,
+        especie: document.getElementById('prod-especie').value,
         imagem_url: document.getElementById('prod-imagem').value || null,
       };
 
@@ -329,6 +332,7 @@
           document.getElementById('prod-categoria').value = product.categoria || '';
           document.getElementById('prod-estoque').value = product.estoque || 0;
           document.getElementById('prod-descricao').value = product.descricao || '';
+          document.getElementById('prod-especie').value = product.especie || 'Geral';
           document.getElementById('prod-imagem').value = product.imagem_url || '';
 
           isEditing = true;
